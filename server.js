@@ -13,7 +13,7 @@ const auth  = require('./routes/auth');
 const convs = require('./routes/conversations');
 
 // ── Configurações ────────────────────────────────────────
-const GROQ_API_KEY      = process.env.GROQ_API_KEY || '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';
+const GROQ_API_KEY      = process.env.GROQ_API_KEY;
 const PORT              = process.env.PORT || 3000;
 const GROQ_MODEL_TEXT   = 'llama-3.3-70b-versatile';
 const GROQ_MODEL_VISION = 'meta-llama/llama-4-scout-17b-16e-instruct';
