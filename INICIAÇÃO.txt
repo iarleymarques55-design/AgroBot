@@ -1,0 +1,108 @@
+Atue como um Arquiteto de Software Sênior e Desenvolvedor Full Stack especialista em Inteligência Artificial e Agronegócio.
+
+Quero desenvolver uma aplicação web profissional chamada AgroAI, um assistente agrícola inteligente que 
+ajuda agricultores a tirar dúvidas sobre cultivo, solo, irrigação, fertilização, pragas, doenças e produtividade.
+
+TECNOLOGIAS OBRIGATÓRIAS
+
+Frontend:
+- HTML5
+- CSS3
+- JavaScript
+- Tailwind CSS
+- Interface moderna e responsiva
+
+Backend:
+- Node.js
+- Express.js
+- API REST
+
+Banco de Dados:
+- PostgreSQL
+- Hospedado na Neon
+
+Hospedagem:
+- Frontend na Vercel
+- Backend na Render
+- Banco PostgreSQL na Neon
+
+FUNCIONALIDADES
+
+1. Sistema de autenticação
+- Cadastro
+- Login
+- JWT
+- Criptografia com bcrypt
+
+2. Chat com IA
+- Interface semelhante ao ChatGPT
+- Histórico de conversas
+- Respostas em tempo real
+
+3. Especialização agrícola
+A IA deve responder perguntas sobre:
+- pH do solo
+- Irrigação
+- Adubação
+- Plantio
+- Colheita
+- Controle de pragas
+- Controle de doenças
+- Hortaliças
+- Frutíferas
+- Grãos
+- Agricultura familiar
+
+4. Histórico Inteligente
+- Salvar conversas no PostgreSQL
+- Pesquisar conversas anteriores
+- Favoritar respostas
+
+5. Dashboard
+- Quantidade de consultas realizadas
+- Temas mais pesquisados
+- Estatísticas do usuário
+
+6. Base de Conhecimento
+- Cadastro de culturas agrícolas
+- Faixa ideal de pH
+- Necessidade hídrica
+- Época de plantio
+- Recomendações de manejo
+
+ESTRUTURA DO BANCO
+
+Crie todas as tabelas necessárias:
+- users
+- chats
+- messages
+- crops
+- soil_data
+- recommendations
+
+Forneça:
+- Modelagem completa
+- Scripts SQL PostgreSQL
+- Relacionamentos
+- Índices
+
+QUALIDADE
+
+- Código limpo
+- Arquitetura MVC
+- Segurança
+- Responsividade
+- Escalabilidade
+- Boas práticas de mercado
+
+ENTREGA
+
+1. Estrutura completa do projeto.
+2. Estrutura de pastas.
+3. Banco PostgreSQL completo.
+4. Backend Node.js.
+5. Frontend com Tailwind CSS.
+6. Integração com IA.
+7. Integração com PostgreSQL na Neon.
+8. Deploy na Vercel e Render.
+9. Guia passo a passo para implementação.
