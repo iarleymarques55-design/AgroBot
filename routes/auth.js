@@ -7,7 +7,7 @@ const JWT_SECRET  = process.env.JWT_SECRET || 'agrobot_secret_mude_em_producao';
 const SALT_ROUNDS = 12;
 const MAILERSEND_KEY    = process.env.MAILERSEND_KEY;
 const MAILERSEND_DOMAIN = 'test-pzkmgq7md6ll059v.mlsender.net';
-const FROM_EMAIL        = `MS_agrobot@${MAILERSEND_DOMAIN}`;
+const FROM_EMAIL        = `noreply@${MAILERSEND_DOMAIN}`;
 const FROM_NAME         = 'AgroBot';
 
 // ── Helpers ───────────────────────────────────────────────
