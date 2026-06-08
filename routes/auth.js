@@ -3,11 +3,11 @@ const jwt      = require('jsonwebtoken');
 const https    = require('https');
 const { pool } = require('../db');
 
-const JWT_SECRET  = process.env.JWT_SECRET || 'agrobot_secret_mude_em_producao';
-const SALT_ROUNDS = 12;
-const BREVO_KEY  = process.env.BREVO_KEY;
-const FROM_EMAIL = 'curso3788@gmail.com';
-const FROM_NAME  = 'AgroBot';
+const JWT_SECRET   = process.env.JWT_SECRET || 'agrobot_secret_mude_em_producao';
+const SALT_ROUNDS  = 12;
+const SENDGRID_KEY = process.env.SENDGRID_KEY;
+const FROM_EMAIL   = 'claudemarques123@gmail.com';
+const FROM_NAME    = 'AgroBot';
 
 // ── Helpers ───────────────────────────────────────────────
 function signToken(userId) {
@@ -35,14 +35,14 @@ function gerarCodigo() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// ── Envio de e-mail via Brevo API ────────────────────────
+// ── Envio de e-mail via SendGrid API ─────────────────────
 function enviarEmailConfirmacao(email, nome, codigo) {
   return new Promise((resolve, reject) => {
     const body = JSON.stringify({
-      sender:  { email: FROM_EMAIL, name: FROM_NAME },
-      to:      [{ email, name: nome }],
+      personalizations: [{ to: [{ email, name: nome }] }],
+      from:    { email: FROM_EMAIL, name: FROM_NAME },
       subject: 'Confirme seu cadastro no AgroBot',
-      htmlContent: `
+      content: [{ type: 'text/html', value: `
         <div style="font-family:sans-serif;max-width:480px;margin:0 auto;background:#0B0E0A;color:#F0F5EC;padding:32px;border-radius:12px;border:1px solid rgba(163,230,53,0.2)">
           <h2 style="color:#A3E635;margin-bottom:8px;font-family:monospace">AGROBOT</h2>
           <p style="color:#B8CDB0;margin-bottom:24px">Olá, <strong>${nome}</strong>!</p>
@@ -53,16 +53,16 @@ function enviarEmailConfirmacao(email, nome, codigo) {
           <p style="color:#7FBF90;font-size:13px">Este código expira em <strong>10 minutos</strong>.</p>
           <p style="color:#7FBF90;font-size:13px;margin-top:8px">Se não foi você, ignore este e-mail.</p>
         </div>
-      `,
+      ` }],
     });
 
     const options = {
-      hostname: 'api.brevo.com',
-      path:     '/v3/smtp/email',
+      hostname: 'api.sendgrid.com',
+      path:     '/v3/mail/send',
       method:   'POST',
       headers: {
         'Content-Type':  'application/json',
-        'api-key':       BREVO_KEY,
+        'Authorization': `Bearer ${SENDGRID_KEY}`,
         'Content-Length': Buffer.byteLength(body),
       },
     };
@@ -74,7 +74,7 @@ function enviarEmailConfirmacao(email, nome, codigo) {
         if (res.statusCode >= 200 && res.statusCode < 300) {
           resolve();
         } else {
-          reject(new Error(`Brevo erro ${res.statusCode}: ${data}`));
+          reject(new Error(`SendGrid erro ${res.statusCode}: ${data}`));
         }
       });
     });
