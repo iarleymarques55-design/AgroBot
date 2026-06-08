@@ -5,10 +5,9 @@ const { pool } = require('../db');
 
 const JWT_SECRET  = process.env.JWT_SECRET || 'agrobot_secret_mude_em_producao';
 const SALT_ROUNDS = 12;
-const MAILERSEND_KEY    = process.env.MAILERSEND_KEY;
-const MAILERSEND_DOMAIN = 'test-pzkmgq7md6ll059v.mlsender.net';
-const FROM_EMAIL = `noreply@test-pzkmgq7md6ll059v.mlsender.net`;
-const FROM_NAME         = 'AgroBot';
+const BREVO_KEY  = process.env.BREVO_KEY;
+const FROM_EMAIL = 'curso3788@gmail.com';
+const FROM_NAME  = 'AgroBot';
 
 // ── Helpers ───────────────────────────────────────────────
 function signToken(userId) {
@@ -36,14 +35,14 @@ function gerarCodigo() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// ── Envio de e-mail via MailerSend API ────────────────────
+// ── Envio de e-mail via Brevo API ────────────────────────
 function enviarEmailConfirmacao(email, nome, codigo) {
   return new Promise((resolve, reject) => {
     const body = JSON.stringify({
-      from: { email: FROM_EMAIL, name: FROM_NAME },
-      to:   [{ email, name: nome }],
+      sender:  { email: FROM_EMAIL, name: FROM_NAME },
+      to:      [{ email, name: nome }],
       subject: 'Confirme seu cadastro no AgroBot',
-      html: `
+      htmlContent: `
         <div style="font-family:sans-serif;max-width:480px;margin:0 auto;background:#0B0E0A;color:#F0F5EC;padding:32px;border-radius:12px;border:1px solid rgba(163,230,53,0.2)">
           <h2 style="color:#A3E635;margin-bottom:8px;font-family:monospace">AGROBOT</h2>
           <p style="color:#B8CDB0;margin-bottom:24px">Olá, <strong>${nome}</strong>!</p>
@@ -58,12 +57,12 @@ function enviarEmailConfirmacao(email, nome, codigo) {
     });
 
     const options = {
-      hostname: 'api.mailersend.com',
-      path:     '/v1/email',
+      hostname: 'api.brevo.com',
+      path:     '/v3/smtp/email',
       method:   'POST',
       headers: {
         'Content-Type':  'application/json',
-        'Authorization': `Bearer ${MAILERSEND_KEY}`,
+        'api-key':       BREVO_KEY,
         'Content-Length': Buffer.byteLength(body),
       },
     };
@@ -75,7 +74,7 @@ function enviarEmailConfirmacao(email, nome, codigo) {
         if (res.statusCode >= 200 && res.statusCode < 300) {
           resolve();
         } else {
-          reject(new Error(`MailerSend erro ${res.statusCode}: ${data}`));
+          reject(new Error(`Brevo erro ${res.statusCode}: ${data}`));
         }
       });
     });
