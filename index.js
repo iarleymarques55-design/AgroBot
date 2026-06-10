@@ -1,13 +1,4 @@
-// ══════════════════════════════════════════════════════════
-//  GOOGLE CLIENT ID
-//  Troque pelo seu Client ID do Google Cloud Console:
-//  https://console.cloud.google.com/apis/credentials
-//  (crie um projeto → Credenciais → ID do cliente OAuth 2.0
-//   → Aplicativo da Web → adicione http://localhost:3000
-//   e seu domínio de produção nas origens autorizadas)
-// ══════════════════════════════════════════════════════════
 const GOOGLE_CLIENT_ID = '761483976058-0caqmofpr2pfffsj5m7ljbb503t2b0ag.apps.googleusercontent.com';
-// ══════════════════════════════════════════════════════════
 
 // ── Modal ──
 function openModal(type){
@@ -23,7 +14,6 @@ function closeModalOutside(e){
 function switchModal(type){
   document.getElementById('loginForm').style.display  = type==='login'  ? 'block':'none';
   document.getElementById('signupForm').style.display = type==='signup' ? 'block':'none';
-  // limpa erros ao trocar
   ['loginError','signupError'].forEach(id=>{ const el=document.getElementById(id); if(el){el.style.display='none';el.textContent='';} });
 }
 
@@ -34,23 +24,14 @@ function showError(id, msg){
   el.style.display = 'block';
 }
 
-// ── Google Sign-In (Identity Services — popup) ──
+// ── Google Sign-In ──
 function googleSignIn(){
   const btnLogin  = document.getElementById('googleLoginBtn');
   const btnSignup = document.getElementById('googleSignupBtn');
 
-  // Checar se o Client ID foi configurado
-  if(GOOGLE_CLIENT_ID.startsWith('SEU_CLIENT_ID')){
-    const activeForm = document.getElementById('loginForm').style.display !== 'none' ? 'loginError' : 'signupError';
-    showError(activeForm, 'Configure o GOOGLE_CLIENT_ID no código antes de usar.');
-    return;
-  }
-
-  // Estado de loading
   if(btnLogin)  { btnLogin.classList.add('loading');  btnLogin.textContent  = ''; }
   if(btnSignup) { btnSignup.classList.add('loading'); btnSignup.textContent = ''; }
 
-  // Inicializar Google Identity Services
   google.accounts.oauth2.initTokenClient({
     client_id: GOOGLE_CLIENT_ID,
     scope: 'openid email profile',
@@ -61,7 +42,6 @@ function googleSignIn(){
         showError(activeErr, 'Erro ao autenticar com o Google.');
         return;
       }
-      // Buscar dados do usuário com o access_token
       try {
         const r = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
           headers: { Authorization: 'Bearer ' + tokenResponse.access_token }
@@ -102,20 +82,19 @@ function togglePass(inputId, eyeId) {
   }
 }
 
-// ── Validação de e-mail real ──
+// ── Validação de e-mail ──
 function isValidEmail(email) {
-  // Deve começar com pelo menos uma letra, depois pode ter letras/números/pontos/etc
   const re = /^[a-zA-Z][a-zA-Z0-9._%+\-]*@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
   return re.test(email);
 }
 
-// ── Salva token JWT no sessionStorage ──
+// ── Salva token JWT ──
 function saveSession(token, user) {
   sessionStorage.setItem('agro_token', token);
   sessionStorage.setItem('agro_user',  JSON.stringify(user));
 }
 
-// ── Google: envia dados para o backend criar/logar o usuário ──
+// ── Google: envia dados para o backend ──
 async function onGoogleSuccess(user){
   resetGoogleBtns();
   try {
@@ -146,7 +125,7 @@ function resetGoogleBtns(){
   });
 }
 
-// ── Login por e-mail — valida no banco real ──
+// ── Login por e-mail ──
 async function goToChat(){
   const emailEl = document.getElementById('loginEmail');
   const passEl  = document.getElementById('loginPass');
@@ -186,10 +165,7 @@ async function goToChat(){
   }
 }
 
-// ── Cadastro por e-mail — cria usuário no banco real ──
-// E-mail pendente de verificação
-let pendingVerification = { email: '', name: '' };
-
+// ── Cadastro por e-mail — cria conta direto, sem verificação ──
 async function doSignup(){
   const nameEl  = document.getElementById('signupName');
   const emailEl = document.getElementById('signupEmail');
@@ -213,7 +189,7 @@ async function doSignup(){
   if(!ok) return;
 
   const btn = document.querySelector('#signupForm .form-submit');
-  if(btn){ btn.disabled = true; btn.textContent = 'Enviando código...'; }
+  if(btn){ btn.disabled = true; btn.textContent = 'Criando conta...'; }
 
   try {
     const r = await fetch('/api/register', {
@@ -229,140 +205,15 @@ async function doSignup(){
       return;
     }
 
-    // Guardamos para usar na verificação
-    pendingVerification = { email, name };
-
-    // Mostrar tela de verificação
-    showVerificationScreen(email);
+    // Conta criada — salva sessão e entra direto
+    saveSession(data.token, data.user);
+    closeModal();
+    window.location.href = 'agrobot.html';
   } catch {
     showError('signupError', 'Erro de conexão. Verifique sua internet.');
   } finally {
     if(btn){ btn.disabled = false; btn.textContent = 'Criar conta grátis →'; }
   }
-}
-
-// ── Tela de verificação de código ──
-function showVerificationScreen(email) {
-  const overlay = document.getElementById('modalOverlay');
-  const modal   = overlay.querySelector('.modal');
-
-  modal.innerHTML = `
-    <button class="modal-close" onclick="closeModal()" aria-label="Fechar">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M18 6L6 18M6 6l12 12"/>
-      </svg>
-    </button>
-
-    <div class="modal-logo">
-      <div class="modal-logo-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/>
-        </svg>
-      </div>
-      <span class="modal-logo-name">AGRO<span>BOT</span></span>
-    </div>
-
-    <div class="modal-header">
-      <h2>Confirme seu e-mail</h2>
-      <p>Enviamos um código de 6 dígitos para<br><strong>${email}</strong></p>
-    </div>
-
-    <div style="margin:20px 0">
-      <label class="form-label">CÓDIGO DE VERIFICAÇÃO</label>
-      <input
-        id="verifyCode"
-        class="form-input"
-        type="text"
-        inputmode="numeric"
-        maxlength="6"
-        placeholder="000000"
-        style="text-align:center;font-size:24px;letter-spacing:8px;font-weight:700"
-        oninput="this.value=this.value.replace(/[^0-9]/g,'')"
-      />
-      <div id="verifyError" class="form-error" style="display:none"></div>
-    </div>
-
-    <button class="form-submit" onclick="confirmCode()" id="verifyBtn">
-      CONFIRMAR →
-    </button>
-
-    <p class="modal-switch" style="margin-top:16px;text-align:center">
-      Não recebeu? <a onclick="reenviarCodigo('${email}')">Reenviar código</a>
-    </p>
-    <p class="modal-switch" style="margin-top:8px;text-align:center">
-      <a onclick="voltarCadastro()">← Voltar</a>
-    </p>
-  `;
-
-  // Foco no input
-  setTimeout(() => document.getElementById('verifyCode')?.focus(), 100);
-}
-
-async function confirmCode() {
-  const codeEl = document.getElementById('verifyCode');
-  const code   = codeEl?.value.trim();
-  document.getElementById('verifyError').style.display = 'none';
-
-  if (!code || code.length !== 6) {
-    document.getElementById('verifyError').style.display = 'block';
-    document.getElementById('verifyError').textContent = 'Digite o código de 6 dígitos.';
-    return;
-  }
-
-  const btn = document.getElementById('verifyBtn');
-  if(btn){ btn.disabled = true; btn.textContent = 'Verificando...'; }
-
-  try {
-    const r = await fetch('/api/verify-email', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ email: pendingVerification.email, code }),
-    });
-    const data = await r.json();
-
-    if (!r.ok) {
-      document.getElementById('verifyError').style.display = 'block';
-      document.getElementById('verifyError').textContent = data.error || 'Código inválido.';
-      return;
-    }
-
-    saveSession(data.token, data.user);
-    closeModal();
-    window.location.href = 'agrobot.html';
-  } catch {
-    document.getElementById('verifyError').style.display = 'block';
-    document.getElementById('verifyError').textContent = 'Erro de conexão.';
-  } finally {
-    if(btn){ btn.disabled = false; btn.textContent = 'CONFIRMAR →'; }
-  }
-}
-
-async function reenviarCodigo(email) {
-  // Busca os dados do formulário original para reenviar
-  try {
-    const r = await fetch('/api/register', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({
-        name:     pendingVerification.name,
-        email:    pendingVerification.email,
-        password: 'reenvio_placeholder_12345', // será sobrescrito pelo hash existente
-      }),
-    });
-    alert('Novo código enviado para ' + email);
-  } catch {
-    alert('Erro ao reenviar. Tente novamente.');
-  }
-}
-
-function voltarCadastro() {
-  // Reabrir o modal de cadastro
-  const overlay = document.getElementById('modalOverlay');
-  overlay.classList.remove('active');
-  setTimeout(() => {
-    showSignup();
-    overlay.classList.add('active');
-  }, 100);
 }
 
 // ── Waitlist ──
