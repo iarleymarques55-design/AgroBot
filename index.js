@@ -1,4 +1,4 @@
-const GOOGLE_CLIENT_ID = '761483976058-0caqmofpr2pfffsj5m7ljbb503t2b0ag.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '657423686017-14vqn84rqc7uh43ejb8issplbp200th5.apps.googleusercontent.com';
 
 // ── Modal ──
 function openModal(type){
