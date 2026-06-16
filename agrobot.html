@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AgroBot</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:ital,wght@1,700;1,800&display=swap" rel="stylesheet">
+<link rel="shortcut icon" href="robotica.png" type="image/x-icon">
+<link rel="stylesheet" href="agrobot.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+</head>
+<body>
+
+<!-- ══ MODAL CADASTRO ══ -->
+<div class="modal-overlay" id="loginModal">
+  <div class="modal">
+    <h2>Bem-vindo ao AgroBot</h2>
+    <p>Digite seu nome para personalizar sua experiência.</p>
+    <div class="modal-field">
+      <label>Seu nome</label>
+      <input type="text" id="inputName" placeholder="Ex: Iarley" maxlength="30" autocomplete="off"/>
+    </div>
+    <div class="modal-field">
+      <label>Perfil (opcional)</label>
+      <input type="text" id="inputPlan" placeholder="Ex: Agrônomo, Produtor Rural..." maxlength="40" autocomplete="off"/>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn primary" onclick="saveUser()">Entrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL EDITAR PERFIL ══ -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <h2>Editar perfil</h2>
+    <p>Atualize suas informações.</p>
+    <div class="modal-field">
+      <label>Nome</label>
+      <input type="text" id="editName" maxlength="30" autocomplete="off"/>
+    </div>
+    <div class="modal-field">
+      <label>Perfil</label>
+      <input type="text" id="editPlan" maxlength="40" autocomplete="off"/>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn secondary" onclick="closeModal('editModal')">Cancelar</button>
+      <button class="modal-btn primary" onclick="updateUser()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAINEL CONFIGURAÇÕES ══ -->
+<div class="settings-panel" id="settingsPanel">
+  <div class="settings-backdrop" onclick="closeSettings()"></div>
+  <div class="settings-box">
+    <div class="settings-header">
+      <h2>Configurações</h2>
+      <button class="settings-close" onclick="closeSettings()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="settings-section">
+      <h3>Aparência</h3>
+      <div class="settings-row">
+        <div class="settings-label">Modo compacto <small>Menos espaço entre mensagens</small></div>
+        <div class="toggle" id="togCompact" onclick="this.classList.toggle('on'); applyCompact(this.classList.contains('on'))"></div>
+      </div>
+      <div class="settings-row">
+        <div class="settings-label">Animações <small>Efeitos de entrada das mensagens</small></div>
+        <div class="toggle on" id="togAnim" onclick="this.classList.toggle('on'); applyAnim(this.classList.contains('on'))"></div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <h3>Conversa</h3>
+      <div class="settings-row">
+        <div class="settings-label">Idioma das respostas <small>Idioma padrão do AgroBot</small></div>
+        <select class="settings-select" id="setLang">
+          <option value="pt-BR">Português BR</option>
+          <option value="en">English</option>
+          <option value="es">Español</option>
+        </select>
+      </div>
+      <div class="settings-row">
+        <div class="settings-label">Máx. tokens <small>Tamanho máximo da resposta</small></div>
+        <input type="number" class="settings-input-n" id="setTokens" value="1000" min="200" max="4000" step="100"/>
+      </div>
+    </div>
+    <div class="settings-section">
+      <h3>Dados</h3>
+      <div class="settings-row">
+        <div class="settings-label">Limpar histórico <small>Remove conversas da lista</small></div>
+        <button class="settings-danger-btn" onclick="clearHistory()">Limpar</button>
+      </div>
+    </div>
+    <button class="settings-save-btn" onclick="saveSettings()">Salvar configurações</button>
+  </div>
+</div>
+
+<!-- ══ SIDEBAR ══ -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <a class="sidebar-logo" href="index.html">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;">
+          <path d="M12 22V12" stroke="#A3E635" stroke-width="2" stroke-linecap="round"/>
+          <path d="M12 12C12 12 7 11 5 6C5 6 10 4 14 8C14 8 16 10 12 12Z" fill="#A3E635" fill-opacity="0.4" stroke="#A3E635" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M12 17C12 17 16 15 18 10C18 10 13 9 10 14C10 14 9 16 12 17Z" fill="#4ADE80" fill-opacity="0.35" stroke="#4ADE80" stroke-width="1.5" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span class="logo-name"><em>AGRO</em><span>BOT</span></span>
+    </a>
+    <button class="btn-new" onclick="newChat()" title="Nova conversa">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+    </button>
+  </div>
+
+  <button class="new-chat-btn" onclick="newChat()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+    Nova conversa
+  </button>
+
+  <div class="history-list" id="historyList">
+    <div class="history-empty" id="historyEmpty">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>Nenhuma conversa ainda</span>
+    </div>
+  </div>
+
+  <!-- Menu popup -->
+  <div class="user-menu-popup" id="userMenuPopup">
+    <div class="menu-item" onclick="openEditModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Editar perfil
+    </div>
+    <div class="menu-item" onclick="closeUserMenu();openSettings()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Configurações
+    </div>
+    <div class="menu-item" onclick="closeUserMenu();newChat()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      Nova conversa
+    </div>
+    <div class="menu-sep"></div>
+    <div class="menu-item danger" onclick="logout()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Trocar conta
+    </div>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-info" onclick="toggleUserMenu()">
+      <div class="user-avatar" id="uAvatar">?</div>
+      <div class="user-details">
+        <div class="user-name-el" id="uName">Carregando...</div>
+        <div class="user-plan-el" id="uPlan">AGRONOMIA IA</div>
+      </div>
+      <button class="user-menu-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+      </button>
+    </div>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="sidebar-toggle" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+      <span class="topbar-title">AGROBOT</span>
+      <span class="topbar-badge">IA AGRÍCOLA</span>
+    </div>
+    <div class="topbar-right">
+      <!-- Compartilhar -->
+      <div class="topbar-btn-wrap">
+        <button class="topbar-btn" title="Compartilhar conversa" onclick="toggleExport()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        </button>
+        <div class="export-panel" id="exportPanel">
+          <div class="menu-item" onclick="exportChat('txt')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Exportar .txt
+          </div>
+          <div class="menu-item" onclick="exportChat('md')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Exportar .md
+          </div>
+          <div class="menu-item" onclick="closeExport();exportConversationPDF()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+            Exportar PDF
+          </div>
+          <div class="menu-item" onclick="closeExport();exportConversationWord()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg>
+            Exportar Word (.docx)
+          </div>
+          <div class="menu-sep"></div>
+          <div class="menu-item" onclick="copyAllChat()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copiar conversa
+          </div>
+        </div>
+      </div>
+      <!-- Download -->
+      <button class="topbar-btn" title="Download da conversa" onclick="exportChat('txt')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </button>
+      <!-- Configurações -->
+      <button class="topbar-btn" title="Configurações" onclick="openSettings()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="chat-area" id="chatArea">
+    <div class="messages-wrap" id="messagesWrap">
+      <div class="welcome" id="welcomeScreen">
+        <div class="welcome-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:36px;height:36px;">
+            <path d="M12 22V12" stroke="#A3E635" stroke-width="2" stroke-linecap="round"/>
+            <path d="M12 12C12 12 7 11 5 6C5 6 10 4 14 8C14 8 16 10 12 12Z" fill="#A3E635" fill-opacity="0.4" stroke="#A3E635" stroke-width="1.5" stroke-linejoin="round"/>
+            <path d="M12 17C12 17 16 15 18 10C18 10 13 9 10 14C10 14 9 16 12 17Z" fill="#4ADE80" fill-opacity="0.35" stroke="#4ADE80" stroke-width="1.5" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h1>Por onde começamos, <span class="hl" id="welcomeName">?</span></h1>
+        <p>Sou o AgroBot, seu assistente de agronomia com IA. Descreva seu problema de campo e receba diagnóstico técnico imediato.</p>
+        <div class="suggestions">
+          <button class="suggestion" onclick="useSuggestion(this)">
+            <div class="suggestion-label">Solo</div>
+            <div class="suggestion-text">Minha lavoura tem pH ácido, como corrigir?</div>
+          </button>
+          <button class="suggestion" onclick="useSuggestion(this)">
+            <div class="suggestion-label">Pragas</div>
+            <div class="suggestion-text">Estou vendo manchas nas folhas da soja, o que pode ser?</div>
+          </button>
+          <button class="suggestion" onclick="useSuggestion(this)">
+            <div class="suggestion-label">Irrigação</div>
+            <div class="suggestion-text">Qual a frequência ideal de irrigação para o tomate?</div>
+          </button>
+          <button class="suggestion" onclick="useSuggestion(this)">
+            <div class="suggestion-label">Fertilização</div>
+            <div class="suggestion-text">Quais nutrientes preciso aplicar no plantio do milho?</div>
+          </button>
+          <button class="suggestion" onclick="useSuggestion(this)">
+            <div class="suggestion-label">Documento</div>
+            <div class="suggestion-text">Gerar um receituário agronômico para aplicação de herbicida na soja</div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Preview de arquivos -->
+  <div class="file-preview-bar" id="filePreviewBar"></div>
+
+  <div class="input-area">
+    <div class="input-wrap">
+      <div class="input-row">
+        <textarea class="chat-input" id="chatInput" placeholder="Descreva seu problema agrícola..." rows="1" onkeydown="handleKey(event)" oninput="handleInput(this)"></textarea>
+        <div class="input-actions">
+          <button class="input-btn" id="attachBtn" title="Anexar foto ou arquivo" onclick="document.getElementById('fileInput').click()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+          </button>
+          <input type="file" id="fileInput" style="display:none" multiple accept="image/*,.pdf,.txt,.csv,.xlsx,.doc,.docx" onchange="handleFiles(this)"/>
+          <button class="send-btn" id="sendBtn" onclick="sendMessage()" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9l20-7z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="input-extras">
+      <span class="input-hint">Enter para enviar &nbsp;·&nbsp; <kbd>Shift+Enter</kbd> nova linha</span>
+      <span class="char-count" id="charCount"></span>
+    </div>
+  </div>
+</main>
+
+<div class="agro-toast" id="agroToast"></div>
+
+
+<script src="agrobot.js"></script>
+</body>
+</html>

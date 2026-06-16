@@ -1,0 +1,11 @@
+**COMO INICIAR**
+
+->D:
+
+->cd "Área de Trabalho\PORTIFOLIO\Entrada-portifolio\portifolio\ChatBot-Agro"
+
+->node sever.js
+
+**BACKEND**
+
+->npm start
