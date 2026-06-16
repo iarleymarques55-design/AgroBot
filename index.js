@@ -1,9 +1,4 @@
-<<<<<<< HEAD
 const GOOGLE_CLIENT_ID = '774253533393-v1f21d4qcnogbacoqq6h21evpd4j9d7f.apps.googleusercontent.com';
-=======
-const GOOGLE_CLIENT_ID = '761483976058-0caqmofpr2pfffsj5m7ljbb503t2b0ag.apps.googleusercontent.com';
->>>>>>> 7c0eec90e352585d35f2c372c5d7780cc5362435
-
 // ── Modal ──
 function openModal(type){
   document.getElementById('modalOverlay').classList.add('active');
