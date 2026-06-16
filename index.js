@@ -1,5 +1,6 @@
 const GOOGLE_CLIENT_ID = '774253533393-v1f21d4qcnogbacoqq6h21evpd4j9d7f.apps.googleusercontent.com';
 // ── Modal ──
+
 function openModal(type){
   document.getElementById('modalOverlay').classList.add('active');
   switchModal(type);
